@@ -459,22 +459,101 @@ export default function Home() {
                 </div>
               </div>
 
-              {/* Emotional Message */}
-              <div className={`text-center p-6 rounded-xl ${isProfit ? 'bg-emerald-500/10 border border-emerald-500/20' : 'bg-red-500/10 border border-red-500/20'}`}>
-                <p className="text-lg font-medium">
-                  {results.multiplier > 100 ? (
-                    <span className="text-emerald-300">🏆 Generational wealth. You missed out on history.</span>
-                  ) : results.multiplier > 10 ? (
-                    <span className="text-emerald-300">🔥 Life-changing money. Hope you&apos;re sitting down.</span>
-                  ) : results.multiplier > 2 ? (
-                    <span className="text-emerald-300">💎 Solid gains. Could&apos;ve been nice.</span>
-                  ) : results.multiplier > 1 ? (
-                    <span className="text-yellow-300">📈 Better than the bank, at least.</span>
-                  ) : (
-                    <span className="text-red-300">🛡️ Bullet dodged. Sometimes doing nothing wins.</span>
-                  )}
-                </p>
-              </div>
+              {/* Regret Score */}
+              {(() => {
+                // Calculate regret score (0-10) based on ROI
+                // ROI can be any percentage, we need to map it to 0-10 scale
+                // Using a logarithmic approach: higher ROI = higher score
+                // 0% or negative ROI = 0, 100% ROI = ~3, 1000% ROI = ~7, 10000% ROI = 10
+                const calculateRegretScore = (roi: number): number => {
+                  if (roi <= 0) return 0;
+                  // Logarithmic scale: score = min(10, log10(roi + 1) * 2.5)
+                  const score = Math.log10(roi + 1) * 2.5;
+                  return Math.min(10, Math.max(0, score));
+                };
+
+                const regretScore = calculateRegretScore(results.roi);
+                const scoreDisplay = regretScore.toFixed(1);
+
+                // Get witty message based on regret score
+                const getWittyMessage = (score: number): string => {
+                  if (score >= 9) {
+                    const messages = [
+                      "You could have retired, instead you bought avocado toast.",
+                      "Your future yacht is now someone else's reality.",
+                      "Generational wealth: missed. Participation trophy: earned.",
+                      "You played it safe. The billionaires thank you for that.",
+                    ];
+                    return messages[Math.floor(Math.random() * messages.length)];
+                  } else if (score >= 7) {
+                    const messages = [
+                      "That money could've bought a house. Or two. Or three.",
+                      "Your wallet is crying. Your future self is weeping.",
+                      "You chose instant gratification. They chose compound interest.",
+                      "The 'what ifs' are going to haunt you forever.",
+                    ];
+                    return messages[Math.floor(Math.random() * messages.length)];
+                  } else if (score >= 5) {
+                    const messages = [
+                      "A nice car. A dream vacation. Poof. Gone.",
+                      "You missed the boat, but at least you can wave from shore.",
+                      "Your bank account could've been thicc. It's not.",
+                      "Opportunity knocked. You ordered pizza instead.",
+                    ];
+                    return messages[Math.floor(Math.random() * messages.length)];
+                  } else if (score >= 3) {
+                    const messages = [
+                      "Not life-changing, but definitely wallet-aching.",
+                      "You could've had a fancy dinner. Every week. For years.",
+                      "Small regrets add up. This one is medium-sized.",
+                      "The FOMO is real, but at least it's not crippling.",
+                    ];
+                    return messages[Math.floor(Math.random() * messages.length)];
+                  } else if (score > 0) {
+                    const messages = [
+                      "A gentle reminder that timing is everything.",
+                      "Small missed opportunities. Big 'what if' energy.",
+                      "You didn't miss much... but you still missed something.",
+                      "The universe gave you a hint. You took a nap.",
+                    ];
+                    return messages[Math.floor(Math.random() * messages.length)];
+                  } else {
+                    const messages = [
+                      "🛡️ Bullet dodged. Sometimes doing nothing wins.",
+                      "Your procrastination finally paid off!",
+                      "Not investing was the best investment you made.",
+                      "Turns out, you made the right call. This time.",
+                    ];
+                    return messages[Math.floor(Math.random() * messages.length)];
+                  }
+                };
+
+                const wittyMessage = getWittyMessage(regretScore);
+                const scoreColor = regretScore >= 7 ? 'text-red-400' : regretScore >= 4 ? 'text-yellow-400' : regretScore > 0 ? 'text-emerald-400' : 'text-gray-400';
+                const scoreBg = regretScore >= 7 ? 'bg-red-500/10 border-red-500/20' : regretScore >= 4 ? 'bg-yellow-500/10 border-yellow-500/20' : regretScore > 0 ? 'bg-emerald-500/10 border-emerald-500/20' : 'bg-gray-500/10 border-gray-500/20';
+
+                return (
+                  <div className={`p-6 rounded-xl border ${scoreBg}`}>
+                    <div className="flex items-center justify-between mb-4">
+                      <h3 className="text-white/60 text-sm font-medium uppercase tracking-wider">Regret Score</h3>
+                      <div className={`text-4xl font-bold ${scoreColor}`}>
+                        {scoreDisplay}<span className="text-white/30 text-xl">/10</span>
+                      </div>
+                    </div>
+                    {/* Score Bar */}
+                    <div className="w-full bg-white/10 rounded-full h-3 mb-4 overflow-hidden">
+                      <div
+                        className={`h-full rounded-full transition-all duration-1000 ease-out ${regretScore >= 7 ? 'bg-red-500' : regretScore >= 4 ? 'bg-yellow-500' : regretScore > 0 ? 'bg-emerald-500' : 'bg-gray-500'}`}
+                        style={{ width: `${(regretScore / 10) * 100}%` }}
+                      />
+                    </div>
+                    {/* Witty Message */}
+                    <p className={`text-lg font-medium text-center ${regretScore > 0 ? 'text-white/90' : 'text-gray-300'}`}>
+                      {regretScore > 0 ? '🤦 ' : '🎉 '}{wittyMessage}
+                    </p>
+                  </div>
+                );
+              })()}
 
               {/* Share/Reset Buttons */}
               <div className="flex gap-4">
