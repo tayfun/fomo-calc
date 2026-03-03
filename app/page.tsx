@@ -10,6 +10,7 @@ import {
   AssetValuationResponse,
   SearchResult
 } from './data/investments';
+import SuspenseLoader from './components/SuspenseLoader';
 
 // Generate years from 2010 to current year
 const currentYear = new Date().getFullYear();
@@ -198,10 +199,13 @@ export default function Home() {
       );
 
       setApiResponse(response);
-      setShowResults(true);
+      // Small delay before showing results for dramatic effect
+      setTimeout(() => {
+        setShowResults(true);
+        setIsCalculating(false);
+      }, 500);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to fetch valuation');
-    } finally {
       setIsCalculating(false);
     }
   };
@@ -502,6 +506,9 @@ export default function Home() {
           Not financial advice. Please don&apos;t sue us for your FOMO.
         </p>
       </div>
+
+      {/* Suspense Loader - Shows during calculation */}
+      <SuspenseLoader isLoading={isCalculating} />
     </main>
   );
 }
