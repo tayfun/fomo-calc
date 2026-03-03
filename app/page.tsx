@@ -41,24 +41,24 @@ export default function Home() {
   const results = useMemo(() => {
     if (!apiResponse) {
       return {
-        initialShares: 0,
+        numberOfShares: 0,
         currentValue: 0,
-        profit: 0,
+        netReturn: 0,
         multiplier: 1,
-        percentageReturn: 0,
-        purchasePrice: 0,
-        currentPrice: 0,
+        roi: 0,
+        pricePerShareAtPurchase: 0,
+        pricePerShareCurrent: 0,
       };
     }
     const numAmount = parseFloat(amount) || 0;
     return {
-      initialShares: apiResponse.number_of_shares,
+      numberOfShares: apiResponse.number_of_shares,
       currentValue: apiResponse.current_value,
-      profit: apiResponse.net_return,
+      netReturn: apiResponse.net_return,
       multiplier: apiResponse.current_value / numAmount,
-      percentageReturn: apiResponse.roi,
-      purchasePrice: apiResponse.price_per_share_at_purchase,
-      currentPrice: apiResponse.price_per_share_current,
+      roi: apiResponse.roi,
+      pricePerShareAtPurchase: apiResponse.price_per_share_at_purchase,
+      pricePerShareCurrent: apiResponse.price_per_share_current,
     };
   }, [apiResponse, amount]);
 
@@ -213,7 +213,7 @@ export default function Home() {
     setError(null);
   };
 
-  const isProfit = results.profit > 0;
+  const isProfit = results.netReturn > 0;
 
   return (
     <main className="min-h-screen animated-gradient relative overflow-hidden">
@@ -413,10 +413,10 @@ export default function Home() {
                   {formatLargeCurrency(animatedValue, apiResponse?.currency)}
                 </div>
                 <div className={`text-xl font-semibold ${isProfit ? 'text-emerald-400/80' : 'text-red-400/80'}`}>
-                  {isProfit ? '+' : ''}{formatLargeCurrency(results.profit, apiResponse?.currency)}
+                  {isProfit ? '+' : ''}{formatLargeCurrency(results.netReturn, apiResponse?.currency)}
                   {' '}
                   <span className="text-white/40">
-                    ({isProfit ? '+' : ''}{results.percentageReturn.toFixed(1)}%)
+                    ({isProfit ? '+' : ''}{results.roi.toFixed(1)}%)
                   </span>
                 </div>
               </div>
@@ -426,19 +426,19 @@ export default function Home() {
                 <div className="bg-white/5 rounded-xl p-4 text-center">
                   <p className="text-white/40 text-xs uppercase tracking-wider mb-1">Initial Price</p>
                   <p className="text-white font-semibold">
-                    {formatLargeCurrency(results.purchasePrice, apiResponse?.currency)}
+                    {formatLargeCurrency(results.pricePerShareAtPurchase, apiResponse?.currency)}
                   </p>
                 </div>
                 <div className="bg-white/5 rounded-xl p-4 text-center">
                   <p className="text-white/40 text-xs uppercase tracking-wider mb-1">Current Price</p>
                   <p className="text-white font-semibold">
-                    {formatLargeCurrency(results.currentPrice, apiResponse?.currency)}
+                    {formatLargeCurrency(results.pricePerShareCurrent, apiResponse?.currency)}
                   </p>
                 </div>
                 <div className="bg-white/5 rounded-xl p-4 text-center">
                   <p className="text-white/40 text-xs uppercase tracking-wider mb-1">Shares Owned</p>
                   <p className="text-white font-semibold">
-                    {results.initialShares.toFixed(4)}
+                    {results.numberOfShares.toFixed(4)}
                   </p>
                 </div>
                 <div className="bg-white/5 rounded-xl p-4 text-center">
