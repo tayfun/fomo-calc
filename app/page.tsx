@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useMemo, useCallback, useRef, Suspense } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
+import { toPng } from 'html-to-image';
 import {
   investments,
   fetchAssetValuation,
@@ -53,6 +54,7 @@ function HomeContent() {
   const [showSearchDropdown, setShowSearchDropdown] = useState(false);
   const searchInputRef = useRef<HTMLInputElement>(null);
   const searchContainerRef = useRef<HTMLDivElement>(null);
+  const cardRef = useRef<HTMLDivElement>(null);
 
   // Debounce search
   const searchTimeoutRef = useRef<NodeJS.Timeout | null>(null);
@@ -324,6 +326,33 @@ function HomeContent() {
     router.push('/', { scroll: false });
   };
 
+  const [copied, setCopied] = useState(false);
+
+  const handleShare = () => {
+    const text = `If I had invested ${formatLargeCurrency(parseFloat(amount) || 0, apiResponse?.currency)} in ${selectedInvestment?.name} back in ${selectedYear}, I'd have ${formatLargeCurrency(results.currentValue, apiResponse?.currency)} today... 💀\n\nCalculate your regret at shouldabought.com`;
+    navigator.clipboard.writeText(text);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
+
+  const handleDownload = async () => {
+    if (!cardRef.current) return;
+
+    try {
+      const dataUrl = await toPng(cardRef.current, {
+        quality: 0.95,
+        backgroundColor: '#0f172a',
+      });
+
+      const link = document.createElement('a');
+      link.download = `shouldabought-${selectedInvestment?.symbol}-${selectedYear}.png`;
+      link.href = dataUrl;
+      link.click();
+    } catch (err) {
+      console.error('Failed to download image:', err);
+    }
+  };
+
   const isProfit = results.netReturn > 0;
 
   return (
@@ -350,7 +379,7 @@ function HomeContent() {
         </h1>
 
         {/* Glass Card */}
-        <div className="glass-card rounded-3xl p-8 md:p-12 w-full max-w-2xl animate-slide-up delay-200">
+        <div className="glass-card rounded-3xl p-8 md:p-12 w-full max-w-2xl animate-slide-up delay-200" ref={showResults ? cardRef : undefined}>
           {!showResults ? (
             <div className="space-y-8">
               {/* Amount Input */}
@@ -665,14 +694,19 @@ function HomeContent() {
                   Calculate Again
                 </button>
                 <button
-                  onClick={() => {
-                    const text = `If I had invested ${formatLargeCurrency(parseFloat(amount) || 0, apiResponse?.currency)} in ${selectedInvestment?.name} back in ${selectedYear}, I'd have ${formatLargeCurrency(results.currentValue, apiResponse?.currency)} today... 💀\n\nCalculate your regret at shouldabought.com`;
-                    navigator.clipboard.writeText(text);
-                    alert('Copied to clipboard!');
-                  }}
+                  onClick={handleShare}
                   className="flex-1 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white font-semibold py-4 px-6 rounded-xl transition-all glow-purple"
                 >
-                  Share Regret 💔
+                  {copied ? 'Copied' : 'Copy'}
+                </button>
+                <button
+                  onClick={handleDownload}
+                  className="flex-1 bg-white/10 hover:bg-white/20 text-white font-semibold py-4 px-6 rounded-xl transition-all border border-white/10 flex items-center justify-center gap-2"
+                >
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                  </svg>
+                  Download Card
                 </button>
               </div>
             </div>
