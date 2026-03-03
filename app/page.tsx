@@ -1,7 +1,15 @@
 'use client';
 
 import { useState, useEffect, useMemo } from 'react';
-import { investments, years, calculateReturns, formatCurrency, formatLargeCurrency, Investment } from './data/investments';
+import { 
+  investments, 
+  years, 
+  fetchAssetValuation, 
+  calculateReturnsFromApi, 
+  formatLargeCurrency, 
+  Investment,
+  AssetValuationResponse 
+} from './data/investments';
 
 export default function Home() {
   const [amount, setAmount] = useState<string>('1000');
@@ -11,15 +19,29 @@ export default function Home() {
   const [isCalculating, setIsCalculating] = useState(false);
   const [animatedValue, setAnimatedValue] = useState(0);
   const [regretCount, setRegretCount] = useState(2100000);
+  const [apiResponse, setApiResponse] = useState<AssetValuationResponse | null>(null);
+  const [error, setError] = useState<string | null>(null);
 
+  // Calculate results from API response
   const results = useMemo(() => {
+    if (!apiResponse) {
+      return {
+        initialShares: 0,
+        currentValue: 0,
+        profit: 0,
+        multiplier: 1,
+        percentageReturn: 0,
+        purchasePrice: 0,
+        currentPrice: 0,
+      };
+    }
     const numAmount = parseFloat(amount) || 0;
-    return calculateReturns(numAmount, selectedInvestment, selectedYear);
-  }, [amount, selectedInvestment, selectedYear]);
+    return calculateReturnsFromApi(numAmount, apiResponse);
+  }, [apiResponse, amount]);
 
   // Animate the counter
   useEffect(() => {
-    if (showResults) {
+    if (showResults && results.currentValue > 0) {
       const duration = 2000;
       const steps = 60;
       const increment = results.currentValue / steps;
@@ -45,21 +67,37 @@ export default function Home() {
     return () => clearInterval(interval);
   }, []);
 
-  const handleCalculate = () => {
+  const handleCalculate = async () => {
     setIsCalculating(true);
-    setTimeout(() => {
+    setError(null);
+    
+    try {
+      const numAmount = parseFloat(amount) || 0;
+      const startDate = `${selectedYear}-01-01`;
+      
+      const response = await fetchAssetValuation(
+        selectedInvestment.symbol,
+        numAmount,
+        startDate
+      );
+      
+      setApiResponse(response);
       setShowResults(true);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to fetch valuation');
+    } finally {
       setIsCalculating(false);
-    }, 800);
+    }
   };
 
   const handleReset = () => {
     setShowResults(false);
     setAnimatedValue(0);
+    setApiResponse(null);
+    setError(null);
   };
 
   const isProfit = results.profit > 0;
-  const availableYears = years.filter(y => selectedInvestment.historicalPrices[y] !== undefined);
 
   return (
     <main className="min-h-screen animated-gradient relative overflow-hidden">
@@ -164,7 +202,7 @@ export default function Home() {
                     onChange={(e) => setSelectedYear(parseInt(e.target.value))}
                     className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-4 text-lg font-semibold text-white appearance-none cursor-pointer focus:outline-none focus:border-purple-500/50 focus:ring-2 focus:ring-purple-500/20 transition-all"
                   >
-                    {availableYears.map((year) => (
+                    {years.map((year) => (
                       <option key={year} value={year} className="bg-slate-900">
                         {year}
                       </option>
@@ -177,6 +215,13 @@ export default function Home() {
                   </div>
                 </div>
               </div>
+
+              {/* Error Message */}
+              {error && (
+                <div className="p-4 rounded-xl bg-red-500/10 border border-red-500/20 text-red-300 text-sm">
+                  Error: {error}
+                </div>
+              )}
 
               {/* Calculate Button */}
               <button
@@ -217,6 +262,11 @@ export default function Home() {
                   {' '}back in{' '}
                   <span className="text-white font-semibold">{selectedYear}</span>
                 </p>
+                {apiResponse && (
+                  <p className="text-white/40 text-xs">
+                    Purchase date: {apiResponse.purchase_date}
+                  </p>
+                )}
               </div>
 
               {/* Main Result */}
@@ -239,13 +289,13 @@ export default function Home() {
                 <div className="bg-white/5 rounded-xl p-4 text-center">
                   <p className="text-white/40 text-xs uppercase tracking-wider mb-1">Initial Price</p>
                   <p className="text-white font-semibold">
-                    ${selectedInvestment.historicalPrices[selectedYear]?.toFixed(2)}
+                    ${results.purchasePrice.toFixed(2)}
                   </p>
                 </div>
                 <div className="bg-white/5 rounded-xl p-4 text-center">
                   <p className="text-white/40 text-xs uppercase tracking-wider mb-1">Current Price</p>
                   <p className="text-white font-semibold">
-                    ${selectedInvestment.currentPrice.toFixed(2)}
+                    ${results.currentPrice.toFixed(2)}
                   </p>
                 </div>
                 <div className="bg-white/5 rounded-xl p-4 text-center">
