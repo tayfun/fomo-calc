@@ -1,6 +1,7 @@
 'use client';
 
-import { useState, useEffect, useMemo, useCallback, useRef } from 'react';
+import { useState, useEffect, useMemo, useCallback, useRef, Suspense } from 'react';
+import { useSearchParams, useRouter } from 'next/navigation';
 import {
   investments,
   fetchAssetValuation,
@@ -16,7 +17,24 @@ import SuspenseLoader from './components/SuspenseLoader';
 const currentYear = new Date().getFullYear();
 const years = Array.from({ length: currentYear - 2010 + 1 }, (_, i) => 2010 + i);
 
+// Main page component wrapped in Suspense
 export default function Home() {
+  return (
+    <Suspense fallback={
+      <main className="min-h-screen animated-gradient relative overflow-hidden flex items-center justify-center">
+        <div className="text-white text-xl">Loading...</div>
+      </main>
+    }>
+      <HomeContent />
+    </Suspense>
+  );
+}
+
+// Inner component that uses useSearchParams
+function HomeContent() {
+  const searchParams = useSearchParams();
+  const router = useRouter();
+
   const [amount, setAmount] = useState<string>('1000');
   const [selectedInvestment, setSelectedInvestment] = useState<Investment | null>(null);
   const [selectedYear, setSelectedYear] = useState<number>(2015);
@@ -191,6 +209,76 @@ export default function Home() {
     }
   }, []);
 
+  // Load values from URL parameters on mount
+  useEffect(() => {
+    const ticker = searchParams.get('ticker');
+    const totalAmount = searchParams.get('total_amount_invested');
+    const startDate = searchParams.get('start_date');
+
+    if (ticker) {
+      const existingInvestment = investments.find(inv => inv.symbol === ticker);
+      if (existingInvestment) {
+        setSelectedInvestment(existingInvestment);
+        setSearchQuery(`${existingInvestment.name} (${existingInvestment.symbol})`);
+      } else {
+        // Create a temporary investment for custom tickers
+        const newInvestment: Investment = {
+          id: ticker.toLowerCase(),
+          name: ticker,
+          symbol: ticker,
+          icon: '📈',
+          color: '#6366f1',
+          category: 'stock',
+        };
+        setSelectedInvestment(newInvestment);
+        setSearchQuery(`${ticker} (${ticker})`);
+      }
+    }
+
+    if (totalAmount) {
+      setAmount(totalAmount);
+    }
+
+    if (startDate) {
+      const year = parseInt(startDate.split('-')[0]);
+      if (!isNaN(year) && year >= 2010 && year <= currentYear) {
+        setSelectedYear(year);
+      }
+    }
+
+    // If all required params are present, auto-calculate
+    if (ticker && totalAmount && startDate) {
+      setTimeout(() => {
+        handleCalculateFromParams(ticker, totalAmount, startDate);
+      }, 100);
+    }
+  }, [searchParams]);
+
+  // Helper function to calculate from URL params
+  const handleCalculateFromParams = async (ticker: string, totalAmount: string, startDate: string) => {
+    setIsCalculating(true);
+    setError(null);
+
+    try {
+      const numAmount = parseFloat(totalAmount) || 0;
+
+      const response = await fetchAssetValuation(
+        ticker,
+        numAmount,
+        startDate
+      );
+
+      setApiResponse(response);
+      setTimeout(() => {
+        setShowResults(true);
+        setIsCalculating(false);
+      }, 500);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to fetch valuation');
+      setIsCalculating(false);
+    }
+  };
+
   const handleCalculate = async () => {
     if (!selectedInvestment) return;
 
@@ -200,6 +288,13 @@ export default function Home() {
     try {
       const numAmount = parseFloat(amount) || 0;
       const startDate = `${selectedYear}-01-01`;
+
+      // Update URL with form parameters
+      const params = new URLSearchParams();
+      params.set('ticker', selectedInvestment.symbol);
+      params.set('total_amount_invested', amount);
+      params.set('start_date', startDate);
+      router.push(`?${params.toString()}`, { scroll: false });
 
       const response = await fetchAssetValuation(
         selectedInvestment.symbol,
@@ -225,6 +320,8 @@ export default function Home() {
     setApiResponse(null);
     setError(null);
     setCounterAnimationComplete(false);
+    // Clear URL parameters
+    router.push('/', { scroll: false });
   };
 
   const isProfit = results.netReturn > 0;
