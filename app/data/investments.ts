@@ -239,11 +239,99 @@ export function formatCurrency(value: number): string {
   return `$${value.toFixed(2)}`;
 }
 
-export function formatLargeCurrency(value: number): string {
-  return new Intl.NumberFormat('en-US', {
-    style: 'currency',
-    currency: 'USD',
+// Currency code to symbol mapping
+export const currencySymbols: Record<string, string> = {
+  USD: '$',
+  EUR: '€',
+  GBP: '£',
+  JPY: '¥',
+  CNY: '¥',
+  KRW: '₩',
+  INR: '₹',
+  RUB: '₽',
+  BRL: 'R$',
+  CAD: 'C$',
+  AUD: 'A$',
+  CHF: 'Fr',
+  SEK: 'kr',
+  NOK: 'kr',
+  DKK: 'kr',
+  PLN: 'zł',
+  THB: '฿',
+  VND: '₫',
+  IDR: 'Rp',
+  MYR: 'RM',
+  PHP: '₱',
+  SGD: 'S$',
+  HKD: 'HK$',
+  NZD: 'NZ$',
+  MXN: '$',
+  ZAR: 'R',
+  TRY: '₺',
+  AED: 'د.إ',
+  SAR: '﷼',
+  ILS: '₪',
+  EGP: '£',
+  NGN: '₦',
+  KES: 'KSh',
+  PKR: '₨',
+  BDT: '৳',
+  LKR: 'Rs',
+  COP: '$',
+  ARS: '$',
+  CLP: '$',
+  PEN: 'S/',
+  UYU: '$',
+  HUF: 'Ft',
+  CZK: 'Kč',
+  RON: 'lei',
+  BGN: 'лв',
+  HRK: 'kn',
+  ISK: 'kr',
+  UAH: '₴',
+  MDL: 'L',
+  AMD: '֏',
+  GEL: '₾',
+  AZN: '₼',
+  KZT: '₸',
+  UZS: 'soʻm',
+  TMT: 'T',
+  TJS: 'SM',
+  KGS: 'с',
+  AFN: '؋',
+  IRR: '﷼',
+  IQD: 'ع.د',
+  SYP: '£',
+  YER: '﷼',
+  JOD: 'د.ا',
+  LBP: 'ل.ل',
+  QAR: '﷼',
+  KWD: 'د.ك',
+  BHD: 'د.ب',
+  OMR: '﷼',
+};
+
+/**
+ * Get currency symbol from 3-letter currency code
+ */
+export function getCurrencySymbol(currencyCode: string): string {
+  return currencySymbols[currencyCode.toUpperCase()] || currencyCode;
+}
+
+export function formatLargeCurrency(value: number, currency: string = 'USD'): string {
+  const symbol = getCurrencySymbol(currency);
+  
+  // Format the number without currency symbol first
+  const formattedNumber = new Intl.NumberFormat('en-US', {
     minimumFractionDigits: 2,
     maximumFractionDigits: 2,
   }).format(value);
+  
+  // Prepend the symbol (handle symbols that should appear after the number)
+  const suffixSymbols = ['kr', 'Ft', 'Kč', 'zł', 'lei', 'лв', 'kn', 'L', 'soʻm', 'T', 'SM', 'с'];
+  if (suffixSymbols.includes(symbol)) {
+    return `${formattedNumber} ${symbol}`;
+  }
+  
+  return `${symbol}${formattedNumber}`;
 }

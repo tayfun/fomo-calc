@@ -383,7 +383,7 @@ export default function Home() {
               <div className="text-center space-y-2">
                 <p className="text-white/60 text-sm uppercase tracking-wider">
                   If you invested{' '}
-                  <span className="text-white font-semibold">{formatLargeCurrency(parseFloat(amount) || 0)}</span>
+                  <span className="text-white font-semibold">{formatLargeCurrency(parseFloat(amount) || 0, apiResponse?.currency)}</span>
                   {' '}in{' '}
                   <span className="text-white font-semibold">{selectedInvestment?.name}</span>
                   {' '}back in{' '}
@@ -400,10 +400,10 @@ export default function Home() {
               <div className="text-center space-y-4">
                 <p className="text-white/60 text-lg">You would have today:</p>
                 <div className={`text-5xl md:text-6xl lg:text-7xl font-bold ${isProfit ? 'text-emerald-400' : 'text-red-400'} animate-count-up`}>
-                  {formatLargeCurrency(animatedValue)}
+                  {formatLargeCurrency(animatedValue, apiResponse?.currency)}
                 </div>
                 <div className={`text-xl font-semibold ${isProfit ? 'text-emerald-400/80' : 'text-red-400/80'}`}>
-                  {isProfit ? '+' : ''}{formatLargeCurrency(results.profit)}
+                  {isProfit ? '+' : ''}{formatLargeCurrency(results.profit, apiResponse?.currency)}
                   {' '}
                   <span className="text-white/40">
                     ({isProfit ? '+' : ''}{results.percentageReturn.toFixed(1)}%)
@@ -416,13 +416,13 @@ export default function Home() {
                 <div className="bg-white/5 rounded-xl p-4 text-center">
                   <p className="text-white/40 text-xs uppercase tracking-wider mb-1">Initial Price</p>
                   <p className="text-white font-semibold">
-                    ${results.purchasePrice.toFixed(2)}
+                    {formatLargeCurrency(results.purchasePrice, apiResponse?.currency)}
                   </p>
                 </div>
                 <div className="bg-white/5 rounded-xl p-4 text-center">
                   <p className="text-white/40 text-xs uppercase tracking-wider mb-1">Current Price</p>
                   <p className="text-white font-semibold">
-                    ${results.currentPrice.toFixed(2)}
+                    {formatLargeCurrency(results.currentPrice, apiResponse?.currency)}
                   </p>
                 </div>
                 <div className="bg-white/5 rounded-xl p-4 text-center">
@@ -466,7 +466,7 @@ export default function Home() {
                 </button>
                 <button
                   onClick={() => {
-                    const text = `If I had invested ${formatLargeCurrency(parseFloat(amount) || 0)} in ${selectedInvestment?.name} back in ${selectedYear}, I'd have ${formatLargeCurrency(results.currentValue)} today... 💀\n\nCalculate your regret at shouldabought.com`;
+                    const text = `If I had invested ${formatLargeCurrency(parseFloat(amount) || 0, apiResponse?.currency)} in ${selectedInvestment?.name} back in ${selectedYear}, I'd have ${formatLargeCurrency(results.currentValue, apiResponse?.currency)} today... 💀\n\nCalculate your regret at shouldabought.com`;
                     navigator.clipboard.writeText(text);
                     alert('Copied to clipboard!');
                   }}
