@@ -342,6 +342,10 @@ function HomeContent() {
       const dataUrl = await toPng(cardRef.current, {
         quality: 0.95,
         backgroundColor: '#0f172a',
+        filter: (node) => {
+          // Filter out elements with data-html2img-ignore attribute
+          return !(node instanceof HTMLElement && node.hasAttribute('data-html2img-ignore'));
+        },
       });
 
       const link = document.createElement('a');
@@ -686,7 +690,7 @@ function HomeContent() {
               })()}
 
               {/* Share/Reset Buttons */}
-              <div className="flex gap-4">
+              <div className="flex gap-4" data-html2img-ignore>
                 <button
                   onClick={handleReset}
                   className="flex-1 bg-white/10 hover:bg-white/20 text-white font-semibold py-4 px-6 rounded-xl transition-all border border-white/10"
