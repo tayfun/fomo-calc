@@ -19,6 +19,17 @@ export interface AssetValuationResponse {
   currency: string;
 }
 
+// Search API types
+export interface SearchResult {
+  ticker: string;
+  name: string;
+}
+
+export interface SearchResponse {
+  results: SearchResult[];
+  query: string;
+}
+
 // Frontend display types
 export interface Investment {
   id: string;
@@ -147,6 +158,30 @@ export async function fetchAssetValuation(
   }
 
   return response.json();
+}
+
+/**
+ * Search for stocks by name or ticker symbol
+ */
+export async function searchStocks(query: string): Promise<SearchResult[]> {
+  if (!query || query.trim().length < 1) {
+    return [];
+  }
+
+  const response = await fetch(`${API_BASE_URL}/search?name=${encodeURIComponent(query.trim())}`, {
+    method: 'GET',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+  });
+
+  if (!response.ok) {
+    const errorData = await response.json().catch(() => ({}));
+    throw new Error(errorData.detail || `API error: ${response.status}`);
+  }
+
+  const data: SearchResponse = await response.json();
+  return data.results;
 }
 
 // Calculate returns using backend API response

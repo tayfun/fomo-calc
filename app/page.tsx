@@ -1,19 +1,21 @@
 'use client';
 
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import { 
   investments, 
   years, 
   fetchAssetValuation, 
+  searchStocks,
   calculateReturnsFromApi, 
   formatLargeCurrency, 
   Investment,
-  AssetValuationResponse 
+  AssetValuationResponse,
+  SearchResult 
 } from './data/investments';
 
 export default function Home() {
   const [amount, setAmount] = useState<string>('1000');
-  const [selectedInvestment, setSelectedInvestment] = useState<Investment>(investments[0]);
+  const [selectedInvestment, setSelectedInvestment] = useState<Investment | null>(null);
   const [selectedYear, setSelectedYear] = useState<number>(2015);
   const [showResults, setShowResults] = useState(false);
   const [isCalculating, setIsCalculating] = useState(false);
@@ -21,6 +23,17 @@ export default function Home() {
   const [regretCount, setRegretCount] = useState(2100000);
   const [apiResponse, setApiResponse] = useState<AssetValuationResponse | null>(null);
   const [error, setError] = useState<string | null>(null);
+  
+  // Search/autocomplete state
+  const [searchQuery, setSearchQuery] = useState<string>('');
+  const [searchResults, setSearchResults] = useState<SearchResult[]>([]);
+  const [isSearching, setIsSearching] = useState(false);
+  const [showSearchDropdown, setShowSearchDropdown] = useState(false);
+  const searchInputRef = useRef<HTMLInputElement>(null);
+  const searchContainerRef = useRef<HTMLDivElement>(null);
+  
+  // Debounce search
+  const searchTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   // Calculate results from API response
   const results = useMemo(() => {
@@ -67,7 +80,100 @@ export default function Home() {
     return () => clearInterval(interval);
   }, []);
 
+  // Handle click outside to close search dropdown
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (searchContainerRef.current && !searchContainerRef.current.contains(event.target as Node)) {
+        setShowSearchDropdown(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  // Debounced search function
+  const performSearch = useCallback(async (query: string) => {
+    if (!query || query.trim().length < 1) {
+      setSearchResults([]);
+      return;
+    }
+    
+    setIsSearching(true);
+    try {
+      const results = await searchStocks(query);
+      setSearchResults(results);
+    } catch (err) {
+      console.error('Search error:', err);
+      setSearchResults([]);
+    } finally {
+      setIsSearching(false);
+    }
+  }, []);
+
+  // Handle search input change
+  const handleSearchInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    setSearchQuery(value);
+    
+    // Clear existing timeout
+    if (searchTimeoutRef.current) {
+      clearTimeout(searchTimeoutRef.current);
+    }
+    
+    // Set new timeout for debounced search
+    searchTimeoutRef.current = setTimeout(() => {
+      performSearch(value);
+    }, 300);
+    
+    setShowSearchDropdown(true);
+  };
+
+  // Handle selecting a search result
+  const handleSelectSearchResult = (result: SearchResult) => {
+    // Find if this investment already exists in our list
+    const existingInvestment = investments.find(inv => inv.symbol === result.ticker);
+    
+    if (existingInvestment) {
+      setSelectedInvestment(existingInvestment);
+    } else {
+      // Create a temporary investment object for custom selections
+      const newInvestment: Investment = {
+        id: result.ticker.toLowerCase(),
+        name: result.name,
+        symbol: result.ticker,
+        icon: '📈',
+        color: '#6366f1',
+        category: 'stock',
+      };
+      setSelectedInvestment(newInvestment);
+    }
+    
+    setSearchQuery(`${result.name} (${result.ticker})`);
+    setShowSearchDropdown(false);
+    setSearchResults([]);
+  };
+
+  // Handle selecting from quick pick chips
+  const handleSelectQuickPick = (inv: Investment) => {
+    setSelectedInvestment(inv);
+    setSearchQuery(`${inv.name} (${inv.symbol})`);
+    setShowSearchDropdown(false);
+    // Blur the search input when a quick pick is selected
+    searchInputRef.current?.blur();
+  };
+
+  // Initialize search query with default selection
+  useEffect(() => {
+    if (selectedInvestment) {
+      setSearchQuery(`${selectedInvestment.name} (${selectedInvestment.symbol})`);
+    } else {
+      setSearchQuery('');
+    }
+  }, []);
+
   const handleCalculate = async () => {
+    if (!selectedInvestment) return;
+    
     setIsCalculating(true);
     setError(null);
     
@@ -146,31 +252,52 @@ export default function Home() {
                 </div>
               </div>
 
-              {/* Investment Select */}
-              <div className="space-y-3">
+              {/* Investment Select with Autocomplete */}
+              <div className="space-y-3" ref={searchContainerRef}>
                 <label className="text-white/60 text-sm font-medium uppercase tracking-wider">
                   In
                 </label>
                 <div className="relative">
-                  <select
-                    value={selectedInvestment.id}
-                    onChange={(e) => {
-                      const inv = investments.find(i => i.id === e.target.value);
-                      if (inv) setSelectedInvestment(inv);
-                    }}
-                    className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-4 text-lg font-semibold text-white appearance-none cursor-pointer focus:outline-none focus:border-purple-500/50 focus:ring-2 focus:ring-purple-500/20 transition-all"
-                  >
-                    {investments.map((inv) => (
-                      <option key={inv.id} value={inv.id} className="bg-slate-900">
-                        {inv.icon} {inv.name} ({inv.symbol})
-                      </option>
-                    ))}
-                  </select>
+                  <input
+                    ref={searchInputRef}
+                    type="text"
+                    value={searchQuery}
+                    onChange={handleSearchInputChange}
+                    onFocus={() => setShowSearchDropdown(true)}
+                    placeholder="Search stocks (e.g., Apple, AAPL)..."
+                    className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-4 text-lg font-semibold text-white placeholder:text-white/30 focus:outline-none focus:border-purple-500/50 focus:ring-2 focus:ring-purple-500/20 transition-all"
+                  />
                   <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none">
-                    <svg className="w-5 h-5 text-white/40" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                    </svg>
+                    {isSearching ? (
+                      <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                    ) : (
+                      <svg className="w-5 h-5 text-white/40" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                      </svg>
+                    )}
                   </div>
+                  
+                  {/* Search Results Dropdown */}
+                  {showSearchDropdown && (searchResults.length > 0 || (searchQuery.trim().length > 0 && !isSearching)) && (
+                    <div className="absolute z-50 w-full mt-2 bg-slate-900/95 backdrop-blur-xl border border-white/10 rounded-xl shadow-2xl max-h-60 overflow-y-auto">
+                      {searchResults.length > 0 ? (
+                        searchResults.map((result, index) => (
+                          <button
+                            key={`${result.ticker}-${index}`}
+                            onClick={() => handleSelectSearchResult(result)}
+                            className="w-full px-4 py-3 text-left hover:bg-white/10 transition-colors flex items-center justify-between border-b border-white/5 last:border-b-0"
+                          >
+                            <span className="text-white font-medium">{result.name}</span>
+                            <span className="text-purple-400 font-semibold text-sm">{result.ticker}</span>
+                          </button>
+                        ))
+                      ) : searchQuery.trim().length > 0 && !isSearching ? (
+                        <div className="px-4 py-3 text-white/40 text-sm">
+                          No results found
+                        </div>
+                      ) : null}
+                    </div>
+                  )}
                 </div>
                 
                 {/* Investment quick tags */}
@@ -178,9 +305,9 @@ export default function Home() {
                   {investments.slice(0, 6).map((inv) => (
                     <button
                       key={inv.id}
-                      onClick={() => setSelectedInvestment(inv)}
+                      onClick={() => handleSelectQuickPick(inv)}
                       className={`px-3 py-1.5 rounded-full text-sm font-medium transition-all ${
-                        selectedInvestment.id === inv.id
+                        selectedInvestment?.id === inv.id
                           ? 'bg-purple-500/30 text-purple-200 border border-purple-500/50'
                           : 'bg-white/5 text-white/60 border border-white/10 hover:bg-white/10'
                       }`}
@@ -226,7 +353,7 @@ export default function Home() {
               {/* Calculate Button */}
               <button
                 onClick={handleCalculate}
-                disabled={isCalculating || !amount || parseFloat(amount) <= 0}
+                disabled={isCalculating || !amount || parseFloat(amount) <= 0 || !selectedInvestment}
                 className="w-full bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed text-white font-bold text-lg py-4 px-8 rounded-xl transition-all transform hover:scale-[1.02] active:scale-[0.98] glow-purple flex items-center justify-center gap-3 group"
               >
                 {isCalculating ? (
@@ -258,7 +385,7 @@ export default function Home() {
                   If you invested{' '}
                   <span className="text-white font-semibold">{formatLargeCurrency(parseFloat(amount) || 0)}</span>
                   {' '}in{' '}
-                  <span className="text-white font-semibold">{selectedInvestment.name}</span>
+                  <span className="text-white font-semibold">{selectedInvestment?.name}</span>
                   {' '}back in{' '}
                   <span className="text-white font-semibold">{selectedYear}</span>
                 </p>
@@ -339,7 +466,7 @@ export default function Home() {
                 </button>
                 <button
                   onClick={() => {
-                    const text = `If I had invested ${formatLargeCurrency(parseFloat(amount) || 0)} in ${selectedInvestment.name} back in ${selectedYear}, I'd have ${formatLargeCurrency(results.currentValue)} today... 💀\n\nCalculate your regret at shouldabought.com`;
+                    const text = `If I had invested ${formatLargeCurrency(parseFloat(amount) || 0)} in ${selectedInvestment?.name} back in ${selectedYear}, I'd have ${formatLargeCurrency(results.currentValue)} today... 💀\n\nCalculate your regret at shouldabought.com`;
                     navigator.clipboard.writeText(text);
                     alert('Copied to clipboard!');
                   }}
