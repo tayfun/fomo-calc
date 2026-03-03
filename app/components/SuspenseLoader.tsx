@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 
 const loadingMessages = [
   "Calculating your financial trauma...",
@@ -15,21 +15,38 @@ const loadingMessages = [
   "Loading: Existential dread...",
 ];
 
+// Get a random index different from the current one
+const getRandomIndex = (currentIndex: number, length: number): number => {
+  if (length <= 1) return 0;
+  let newIndex;
+  do {
+    newIndex = Math.floor(Math.random() * length);
+  } while (newIndex === currentIndex);
+  return newIndex;
+};
+
 interface SuspenseLoaderProps {
   isLoading: boolean;
   onLoadingComplete?: () => void;
 }
 
 export default function SuspenseLoader({ isLoading, onLoadingComplete }: SuspenseLoaderProps) {
-  const [currentMessageIndex, setCurrentMessageIndex] = useState(0);
+  const [currentMessageIndex, setCurrentMessageIndex] = useState(() =>
+    Math.floor(Math.random() * loadingMessages.length)
+  );
   const [progress, setProgress] = useState(0);
   const [showLoader, setShowLoader] = useState(false);
 
+  // Function to cycle to next random message
+  const cycleToNextMessage = useCallback(() => {
+    setCurrentMessageIndex((prev) => getRandomIndex(prev, loadingMessages.length));
+  }, []);
+
   useEffect(() => {
     if (isLoading) {
-      // Minimum 1 second display for first message
+      // Start with a random message
       setShowLoader(true);
-      setCurrentMessageIndex(0);
+      setCurrentMessageIndex(Math.floor(Math.random() * loadingMessages.length));
       setProgress(0);
     } else {
       // When loading is done, we can hide the loader
@@ -59,44 +76,44 @@ export default function SuspenseLoader({ isLoading, onLoadingComplete }: Suspens
   useEffect(() => {
     if (!showLoader) return;
 
-    // Rotate messages every 1.5 seconds
+    // Rotate messages every 1 second with random selection
     const messageInterval = setInterval(() => {
-      setCurrentMessageIndex((prev) => (prev + 1) % loadingMessages.length);
-    }, 1500);
+      cycleToNextMessage();
+    }, 1000);
 
     return () => clearInterval(messageInterval);
-  }, [showLoader]);
+  }, [showLoader, cycleToNextMessage]);
 
   if (!showLoader) return null;
 
   return (
     <div className="fixed inset-0 z-50 flex flex-col items-center justify-center">
       {/* Animated gradient background that shifts during loading */}
-      <div 
+      <div
         className="absolute inset-0"
         style={{
-          backgroundImage: `linear-gradient(-45deg, 
-            hsl(${260 + progress * 0.5}, 60%, 15%), 
-            hsl(${280 + progress * 0.3}, 50%, 20%), 
-            hsl(${300 + progress * 0.4}, 55%, 18%), 
+          backgroundImage: `linear-gradient(-45deg,
+            hsl(${260 + progress * 0.5}, 60%, 15%),
+            hsl(${280 + progress * 0.3}, 50%, 20%),
+            hsl(${300 + progress * 0.4}, 55%, 18%),
             hsl(${240 + progress * 0.2}, 45%, 12%))`,
           backgroundSize: '400% 400%',
           backgroundPosition: '0% 50%',
           animation: 'gradientShift 15s ease infinite',
         }}
       />
-      
+
       {/* Animated background orbs */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <div 
+        <div
           className="absolute top-1/4 left-1/4 w-64 h-64 bg-purple-600/30 rounded-full blur-3xl animate-pulse"
           style={{ animationDuration: '2s' }}
         />
-        <div 
+        <div
           className="absolute bottom-1/4 right-1/4 w-80 h-80 bg-indigo-600/20 rounded-full blur-3xl animate-pulse"
           style={{ animationDuration: '2.5s', animationDelay: '0.5s' }}
         />
-        <div 
+        <div
           className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-blue-600/15 rounded-full blur-3xl animate-pulse"
           style={{ animationDuration: '3s', animationDelay: '1s' }}
         />
@@ -112,7 +129,7 @@ export default function SuspenseLoader({ isLoading, onLoadingComplete }: Suspens
 
         {/* Loading message with fade transition */}
         <div className="h-16 flex items-center justify-center">
-          <p 
+          <p
             key={currentMessageIndex}
             className="text-xl md:text-2xl font-medium text-white/90 text-center animate-fade-in"
           >
@@ -125,7 +142,7 @@ export default function SuspenseLoader({ isLoading, onLoadingComplete }: Suspens
           {/* Progress track */}
           <div className="h-2 bg-white/10 rounded-full overflow-hidden">
             {/* Progress fill with shimmer effect */}
-            <div 
+            <div
               className="h-full rounded-full relative overflow-hidden"
               style={{
                 width: `${progress}%`,
@@ -138,7 +155,7 @@ export default function SuspenseLoader({ isLoading, onLoadingComplete }: Suspens
               <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent animate-shimmer" />
             </div>
           </div>
-          
+
           {/* Percentage text */}
           <p className="text-center text-white/40 text-sm font-mono">
             {Math.round(progress)}% of your dignity processed
