@@ -45,7 +45,7 @@ export const investments: Investment[] = [
   {
     id: 'bitcoin',
     name: 'Bitcoin',
-    symbol: 'BTC',
+    symbol: 'BTC-USD',
     icon: '₿',
     color: '#f7931a',
     category: 'crypto',
@@ -85,7 +85,7 @@ export const investments: Investment[] = [
   {
     id: 'sp500',
     name: 'S&P 500',
-    symbol: 'SPX',
+    symbol: '^GSPC',
     icon: '📈',
     color: '#1e40af',
     category: 'index',
