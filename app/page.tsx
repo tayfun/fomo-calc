@@ -26,6 +26,7 @@ export default function Home() {
   const [regretCount, setRegretCount] = useState(2100000);
   const [apiResponse, setApiResponse] = useState<AssetValuationResponse | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [counterAnimationComplete, setCounterAnimationComplete] = useState(false);
 
   // Search/autocomplete state
   const [searchQuery, setSearchQuery] = useState<string>('');
@@ -68,6 +69,7 @@ export default function Home() {
   // Animate the counter
   useEffect(() => {
     if (showResults && results.currentValue > 0) {
+      setCounterAnimationComplete(false);
       const duration = 2000;
       const steps = 60;
       const startValue = results.valueAtPurchase;
@@ -80,6 +82,7 @@ export default function Home() {
         current += increment;
         if ((increment >= 0 && current >= endValue) || (increment < 0 && current <= endValue)) {
           setAnimatedValue(endValue);
+          setCounterAnimationComplete(true);
           clearInterval(timer);
         } else {
           setAnimatedValue(current);
@@ -221,6 +224,7 @@ export default function Home() {
     setAnimatedValue(0);
     setApiResponse(null);
     setError(null);
+    setCounterAnimationComplete(false);
   };
 
   const isProfit = results.netReturn > 0;
@@ -460,7 +464,7 @@ export default function Home() {
               </div>
 
               {/* Regret Score */}
-              {(() => {
+              {counterAnimationComplete && (() => {
                 // Calculate regret score (0-10) based on ROI
                 // ROI can be any percentage, we need to map it to 0-10 scale
                 // Using a logarithmic approach: higher ROI = higher score
@@ -533,7 +537,7 @@ export default function Home() {
                 const scoreBg = regretScore >= 7 ? 'bg-red-500/10 border-red-500/20' : regretScore >= 4 ? 'bg-yellow-500/10 border-yellow-500/20' : regretScore > 0 ? 'bg-emerald-500/10 border-emerald-500/20' : 'bg-gray-500/10 border-gray-500/20';
 
                 return (
-                  <div className={`p-6 rounded-xl border ${scoreBg}`}>
+                  <div className={`p-6 rounded-xl border ${scoreBg} animate-slide-up`}>
                     <div className="flex items-center justify-between mb-4">
                       <h3 className="text-white/60 text-sm font-medium uppercase tracking-wider">Regret Score</h3>
                       <div className={`text-4xl font-bold ${scoreColor}`}>
