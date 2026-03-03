@@ -51,6 +51,14 @@ export const investments: Investment[] = [
     category: 'crypto',
   },
   {
+    id: 'gold',
+    name: 'Gold',
+    symbol: 'GC=F',
+    icon: '🪙',
+    color: '#ffd700',
+    category: 'commodity',
+  },
+  {
     id: 'tesla',
     name: 'Tesla',
     symbol: 'TSLA',
@@ -89,14 +97,6 @@ export const investments: Investment[] = [
     icon: '📈',
     color: '#1e40af',
     category: 'index',
-  },
-  {
-    id: 'gold',
-    name: 'Gold',
-    symbol: 'XAU',
-    icon: '🪙',
-    color: '#ffd700',
-    category: 'commodity',
   },
   {
     id: 'ethereum',
