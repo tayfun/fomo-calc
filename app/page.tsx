@@ -44,6 +44,7 @@ export default function Home() {
       return {
         numberOfShares: 0,
         currentValue: 0,
+        valueAtPurchase: 0,
         netReturn: 0,
         multiplier: 1,
         roi: 0,
@@ -55,6 +56,7 @@ export default function Home() {
     return {
       numberOfShares: apiResponse.number_of_shares,
       currentValue: apiResponse.current_value,
+      valueAtPurchase: apiResponse.value_at_purchase,
       netReturn: apiResponse.net_return,
       multiplier: apiResponse.current_value / numAmount,
       roi: apiResponse.roi,
@@ -68,12 +70,16 @@ export default function Home() {
     if (showResults && results.currentValue > 0) {
       const duration = 2000;
       const steps = 60;
-      const increment = results.currentValue / steps;
-      let current = 0;
+      const startValue = results.valueAtPurchase;
+      const endValue = results.currentValue;
+      const totalChange = endValue - startValue;
+      const increment = totalChange / steps;
+      let current = startValue;
+      setAnimatedValue(startValue);
       const timer = setInterval(() => {
         current += increment;
-        if (current >= results.currentValue) {
-          setAnimatedValue(results.currentValue);
+        if ((increment >= 0 && current >= endValue) || (increment < 0 && current <= endValue)) {
+          setAnimatedValue(endValue);
           clearInterval(timer);
         } else {
           setAnimatedValue(current);
@@ -81,7 +87,7 @@ export default function Home() {
       }, duration / steps);
       return () => clearInterval(timer);
     }
-  }, [showResults, results.currentValue]);
+  }, [showResults, results.currentValue, results.valueAtPurchase]);
 
   // Increment regret counter
   useEffect(() => {
@@ -413,7 +419,7 @@ export default function Home() {
               {/* Main Result */}
               <div className="text-center space-y-4">
                 <p className="text-white/60 text-lg">You would have today:</p>
-                <div className={`text-5xl md:text-6xl lg:text-7xl font-bold ${isProfit ? 'text-emerald-400' : 'text-red-400'} animate-count-up`}>
+                <div className={`text-5xl md:text-6xl lg:text-7xl font-bold ${isProfit ? 'text-emerald-400 text-glow-emerald' : 'text-red-400 text-glow-red'} animate-count-up`}>
                   {formatLargeCurrency(animatedValue, apiResponse?.currency)}
                 </div>
                 <div className={`text-xl font-semibold ${isProfit ? 'text-emerald-400/80' : 'text-red-400/80'}`}>
