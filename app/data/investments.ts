@@ -101,7 +101,7 @@ export const investments: Investment[] = [
   {
     id: 'ethereum',
     name: 'Ethereum',
-    symbol: 'ETH',
+    symbol: 'ETH-USD',
     icon: '◈',
     color: '#627eea',
     category: 'crypto',

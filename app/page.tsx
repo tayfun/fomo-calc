@@ -502,7 +502,7 @@ function HomeContent() {
             <div className="space-y-8 animate-slide-up">
               {/* Results Header */}
               <div className="text-center space-y-2">
-                <p className="text-white/60 text-sm uppercase tracking-wider">
+                <p className="text-white/60 text-lg uppercase tracking-wider">
                   If you invested{' '}
                   <span className="text-white font-semibold">{formatLargeCurrency(parseFloat(amount) || 0, apiResponse?.currency)}</span>
                   {' '}in{' '}
