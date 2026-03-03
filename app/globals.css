@@ -43,7 +43,7 @@ body {
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
   border: 1px solid var(--glass-border);
-  box-shadow: 
+  box-shadow:
     0 8px 32px 0 rgba(0, 0, 0, 0.37),
     inset 0 1px 0 rgba(255, 255, 255, 0.1);
 }
@@ -59,6 +59,21 @@ body {
 
 .glow-red {
   box-shadow: 0 0 40px rgba(239, 68, 68, 0.3);
+}
+
+/* Text glow for result numbers */
+.text-glow-emerald {
+  text-shadow:
+    0 0 20px rgba(16, 185, 129, 0.4),
+    0 0 40px rgba(16, 185, 129, 0.2),
+    0 0 60px rgba(16, 185, 129, 0.1);
+}
+
+.text-glow-red {
+  text-shadow:
+    0 0 20px rgba(239, 68, 68, 0.4),
+    0 0 40px rgba(239, 68, 68, 0.2),
+    0 0 60px rgba(239, 68, 68, 0.1);
 }
 
 /* Custom scrollbar */
