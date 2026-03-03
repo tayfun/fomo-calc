@@ -124,8 +124,7 @@ export const investments: Investment[] = [
   },
 ];
 
-// Years available for selection
-export const years = [2010, 2011, 2012, 2013, 2014, 2015, 2016, 2017, 2018, 2019, 2020, 2021, 2022, 2023, 2024];
+
 
 // API base URL - can be configured via environment variable
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://0.0.0.0:8000/api';
@@ -202,7 +201,7 @@ export function calculateReturnsFromApi(
     currentValue: apiResponse.current_value,
     profit: apiResponse.net_return,
     multiplier: apiResponse.current_value / amount,
-    percentageReturn: apiResponse.roi * 100,
+    percentageReturn: apiResponse.roi,
     purchasePrice: apiResponse.price_per_share_at_purchase,
     currentPrice: apiResponse.price_per_share_current,
   };
@@ -320,18 +319,18 @@ export function getCurrencySymbol(currencyCode: string): string {
 
 export function formatLargeCurrency(value: number, currency: string = 'USD'): string {
   const symbol = getCurrencySymbol(currency);
-  
+
   // Format the number without currency symbol first
   const formattedNumber = new Intl.NumberFormat('en-US', {
     minimumFractionDigits: 2,
     maximumFractionDigits: 2,
   }).format(value);
-  
+
   // Prepend the symbol (handle symbols that should appear after the number)
   const suffixSymbols = ['kr', 'Ft', 'Kč', 'zł', 'lei', 'лв', 'kn', 'L', 'soʻm', 'T', 'SM', 'с'];
   if (suffixSymbols.includes(symbol)) {
     return `${formattedNumber} ${symbol}`;
   }
-  
+
   return `${symbol}${formattedNumber}`;
 }

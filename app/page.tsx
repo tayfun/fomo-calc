@@ -3,7 +3,6 @@
 import { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import { 
   investments, 
-  years, 
   fetchAssetValuation, 
   searchStocks,
   calculateReturnsFromApi, 
@@ -12,6 +11,10 @@ import {
   AssetValuationResponse,
   SearchResult 
 } from './data/investments';
+
+// Generate years from 2010 to current year
+const currentYear = new Date().getFullYear();
+const years = Array.from({ length: currentYear - 2010 + 1 }, (_, i) => 2010 + i);
 
 export default function Home() {
   const [amount, setAmount] = useState<string>('1000');
