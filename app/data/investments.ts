@@ -8,7 +8,7 @@ export interface AssetValuationRequest {
 export interface AssetValuationResponse {
   ticker: string;
   number_of_shares: number;
-  purchase_date: string;
+  start_date: string;
   price_per_share_at_purchase: number;
   value_at_purchase: number;
   price_per_share_current: number;
@@ -181,30 +181,6 @@ export async function searchStocks(query: string): Promise<SearchResult[]> {
 
   const data: SearchResponse = await response.json();
   return data.results;
-}
-
-// Calculate returns using backend API response
-export function calculateReturnsFromApi(
-  amount: number,
-  apiResponse: AssetValuationResponse
-): {
-  initialShares: number;
-  currentValue: number;
-  profit: number;
-  multiplier: number;
-  percentageReturn: number;
-  purchasePrice: number;
-  currentPrice: number;
-} {
-  return {
-    initialShares: apiResponse.number_of_shares,
-    currentValue: apiResponse.current_value,
-    profit: apiResponse.net_return,
-    multiplier: apiResponse.current_value / amount,
-    percentageReturn: apiResponse.roi,
-    purchasePrice: apiResponse.price_per_share_at_purchase,
-    currentPrice: apiResponse.price_per_share_current,
-  };
 }
 
 // Legacy calculateReturns function (kept for compatibility if needed)

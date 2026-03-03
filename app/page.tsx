@@ -1,15 +1,14 @@
 'use client';
 
 import { useState, useEffect, useMemo, useCallback, useRef } from 'react';
-import { 
-  investments, 
-  fetchAssetValuation, 
+import {
+  investments,
+  fetchAssetValuation,
   searchStocks,
-  calculateReturnsFromApi, 
-  formatLargeCurrency, 
+  formatLargeCurrency,
   Investment,
   AssetValuationResponse,
-  SearchResult 
+  SearchResult
 } from './data/investments';
 
 // Generate years from 2010 to current year
@@ -26,7 +25,7 @@ export default function Home() {
   const [regretCount, setRegretCount] = useState(2100000);
   const [apiResponse, setApiResponse] = useState<AssetValuationResponse | null>(null);
   const [error, setError] = useState<string | null>(null);
-  
+
   // Search/autocomplete state
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [searchResults, setSearchResults] = useState<SearchResult[]>([]);
@@ -34,7 +33,7 @@ export default function Home() {
   const [showSearchDropdown, setShowSearchDropdown] = useState(false);
   const searchInputRef = useRef<HTMLInputElement>(null);
   const searchContainerRef = useRef<HTMLDivElement>(null);
-  
+
   // Debounce search
   const searchTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
@@ -52,7 +51,15 @@ export default function Home() {
       };
     }
     const numAmount = parseFloat(amount) || 0;
-    return calculateReturnsFromApi(numAmount, apiResponse);
+    return {
+      initialShares: apiResponse.number_of_shares,
+      currentValue: apiResponse.current_value,
+      profit: apiResponse.net_return,
+      multiplier: apiResponse.current_value / numAmount,
+      percentageReturn: apiResponse.roi,
+      purchasePrice: apiResponse.price_per_share_at_purchase,
+      currentPrice: apiResponse.price_per_share_current,
+    };
   }, [apiResponse, amount]);
 
   // Animate the counter
@@ -100,7 +107,7 @@ export default function Home() {
       setSearchResults([]);
       return;
     }
-    
+
     setIsSearching(true);
     try {
       const results = await searchStocks(query);
@@ -117,17 +124,17 @@ export default function Home() {
   const handleSearchInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
     setSearchQuery(value);
-    
+
     // Clear existing timeout
     if (searchTimeoutRef.current) {
       clearTimeout(searchTimeoutRef.current);
     }
-    
+
     // Set new timeout for debounced search
     searchTimeoutRef.current = setTimeout(() => {
       performSearch(value);
     }, 300);
-    
+
     setShowSearchDropdown(true);
   };
 
@@ -135,7 +142,7 @@ export default function Home() {
   const handleSelectSearchResult = (result: SearchResult) => {
     // Find if this investment already exists in our list
     const existingInvestment = investments.find(inv => inv.symbol === result.ticker);
-    
+
     if (existingInvestment) {
       setSelectedInvestment(existingInvestment);
     } else {
@@ -150,7 +157,7 @@ export default function Home() {
       };
       setSelectedInvestment(newInvestment);
     }
-    
+
     setSearchQuery(`${result.name} (${result.ticker})`);
     setShowSearchDropdown(false);
     setSearchResults([]);
@@ -176,20 +183,20 @@ export default function Home() {
 
   const handleCalculate = async () => {
     if (!selectedInvestment) return;
-    
+
     setIsCalculating(true);
     setError(null);
-    
+
     try {
       const numAmount = parseFloat(amount) || 0;
       const startDate = `${selectedYear}-01-01`;
-      
+
       const response = await fetchAssetValuation(
         selectedInvestment.symbol,
         numAmount,
         startDate
       );
-      
+
       setApiResponse(response);
       setShowResults(true);
     } catch (err) {
@@ -279,7 +286,7 @@ export default function Home() {
                       </svg>
                     )}
                   </div>
-                  
+
                   {/* Search Results Dropdown */}
                   {showSearchDropdown && (searchResults.length > 0 || (searchQuery.trim().length > 0 && !isSearching)) && (
                     <div className="absolute z-50 w-full mt-2 bg-slate-900/95 backdrop-blur-xl border border-white/10 rounded-xl shadow-2xl max-h-60 overflow-y-auto">
@@ -302,7 +309,7 @@ export default function Home() {
                     </div>
                   )}
                 </div>
-                
+
                 {/* Investment quick tags */}
                 <div className="flex flex-wrap gap-2 mt-3">
                   {investments.slice(0, 6).map((inv) => (
@@ -368,10 +375,10 @@ export default function Home() {
                   <>
                     <span className="text-2xl">💀</span>
                     Show Me The Damage
-                    <svg 
-                      className="w-5 h-5 transform group-hover:translate-x-1 transition-transform" 
-                      fill="none" 
-                      stroke="currentColor" 
+                    <svg
+                      className="w-5 h-5 transform group-hover:translate-x-1 transition-transform"
+                      fill="none"
+                      stroke="currentColor"
                       viewBox="0 0 24 24"
                     >
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
@@ -394,7 +401,7 @@ export default function Home() {
                 </p>
                 {apiResponse && (
                   <p className="text-white/40 text-xs">
-                    Purchase date: {apiResponse.purchase_date}
+                    Purchase date: {apiResponse.start_date}
                   </p>
                 )}
               </div>
@@ -491,7 +498,7 @@ export default function Home() {
 
         {/* Disclaimer */}
         <p className="mt-8 text-white/20 text-xs text-center max-w-md">
-          For entertainment purposes only. Past performance doesn&apos;t guarantee future results. 
+          For entertainment purposes only. Past performance doesn&apos;t guarantee future results.
           Not financial advice. Please don&apos;t sue us for your FOMO.
         </p>
       </div>
