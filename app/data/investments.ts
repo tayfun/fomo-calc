@@ -7,6 +7,7 @@ export interface AssetValuationRequest {
 
 export interface AssetValuationResponse {
   ticker: string;
+  name: string;
   number_of_shares: number;
   start_date: string;
   price_per_share_at_purchase: number;

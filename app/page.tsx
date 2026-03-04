@@ -329,14 +329,14 @@ function HomeContent() {
   const [copied, setCopied] = useState(false);
 
   const handleShare = () => {
-    const text = `If I had invested ${formatLargeCurrency(parseFloat(amount) || 0, apiResponse?.currency)} in ${selectedInvestment?.name} back in ${selectedYear}, I'd have ${formatLargeCurrency(results.currentValue, apiResponse?.currency)} today... 💀\n\nCalculate your regret at Fomo Calculator`;
+    const text = `If I had invested ${formatLargeCurrency(parseFloat(amount) || 0, apiResponse?.currency)} in ${apiResponse?.name} (${apiResponse?.ticker}) back in ${selectedYear}, I'd have ${formatLargeCurrency(results.currentValue, apiResponse?.currency)} today... 💀\n\nCalculate your regret at Fomo Calculator`;
     navigator.clipboard.writeText(text);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
   };
 
   const handleShareOnX = () => {
-    const text = `If I had invested ${formatLargeCurrency(parseFloat(amount) || 0, apiResponse?.currency)} in ${selectedInvestment?.name} back in ${selectedYear}, I'd have ${formatLargeCurrency(results.currentValue, apiResponse?.currency)} today... 💀\n\nCalculate your regret at Fomo Calculator`;
+    const text = `If I had invested ${formatLargeCurrency(parseFloat(amount) || 0, apiResponse?.currency)} in ${apiResponse?.name} (${apiResponse?.ticker}) back in ${selectedYear}, I'd have ${formatLargeCurrency(results.currentValue, apiResponse?.currency)} today... 💀\n\nCalculate your regret at Fomo Calculator`;
     const encodedText = encodeURIComponent(text);
     window.open(`https://twitter.com/intent/tweet?text=${encodedText}`, '_blank');
   };
@@ -545,7 +545,7 @@ function HomeContent() {
                   If you invested{' '}
                   <span className="text-white font-semibold">{formatLargeCurrency(parseFloat(amount) || 0, apiResponse?.currency)}</span>
                   {' '}in{' '}
-                  <span className="text-white font-semibold">{selectedInvestment?.name}</span>
+                  <span className="text-white font-semibold">{apiResponse?.name} ({apiResponse?.ticker})</span>
                   {' '}back in{' '}
                   <span className="text-white font-semibold">{selectedYear}</span>
                 </p>
