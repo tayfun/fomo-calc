@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useMemo, useCallback, useRef, Suspense } from 'react';
-import { useSearchParams, useRouter } from 'next/navigation';
+import { useSearchParams } from 'next/navigation';
 import { toPng } from 'html-to-image';
 import {
   investments,
@@ -34,7 +34,6 @@ export default function Home() {
 // Inner component that uses useSearchParams
 function HomeContent() {
   const searchParams = useSearchParams();
-  const router = useRouter();
 
   const [amount, setAmount] = useState<string>('1000');
   const [selectedInvestment, setSelectedInvestment] = useState<Investment | null>(null);
@@ -281,39 +280,17 @@ function HomeContent() {
     }
   };
 
-  const handleCalculate = async () => {
+  const handleCalculate = () => {
     if (!selectedInvestment) return;
 
-    setIsCalculating(true);
-    setError(null);
+    const startDate = `${selectedYear}-01-01`;
 
-    try {
-      const numAmount = parseFloat(amount) || 0;
-      const startDate = `${selectedYear}-01-01`;
-
-      // Update URL with form parameters
-      const params = new URLSearchParams();
-      params.set('ticker', selectedInvestment.symbol);
-      params.set('total_amount_invested', amount);
-      params.set('start_date', startDate);
-      router.push(`?${params.toString()}`, { scroll: false });
-
-      const response = await fetchAssetValuation(
-        selectedInvestment.symbol,
-        numAmount,
-        startDate
-      );
-
-      setApiResponse(response);
-      // Small delay before showing results for dramatic effect
-      setTimeout(() => {
-        setShowResults(true);
-        setIsCalculating(false);
-      }, 500);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to fetch valuation');
-      setIsCalculating(false);
-    }
+    // Update URL with form parameters - useEffect will handle the API call
+    const params = new URLSearchParams();
+    params.set('ticker', selectedInvestment.symbol);
+    params.set('total_amount_invested', amount);
+    params.set('start_date', startDate);
+    window.history.replaceState(null, '', `?${params.toString()}`);
   };
 
   const handleReset = () => {
@@ -322,8 +299,8 @@ function HomeContent() {
     setApiResponse(null);
     setError(null);
     setCounterAnimationComplete(false);
-    // Clear URL parameters
-    router.push('/', { scroll: false });
+    // Clear URL parameters (using window.history to avoid RSC prefetching)
+    window.history.replaceState(null, '', window.location.pathname);
   };
 
   const [copied, setCopied] = useState(false);
