@@ -673,36 +673,38 @@ function HomeContent() {
               })()}
 
               {/* Share/Reset Buttons */}
-              <div className="flex gap-4" data-html2img-ignore>
+              <div className="flex flex-wrap gap-3 sm:gap-4" data-html2img-ignore>
                 <button
                   onClick={handleReset}
-                  className="flex-1 bg-white/10 hover:bg-white/20 text-white font-semibold py-4 px-6 rounded-xl transition-all border border-white/10"
+                  className="flex-1 min-w-[120px] bg-white/10 hover:bg-white/20 text-white font-semibold py-3 sm:py-4 px-4 sm:px-6 rounded-xl transition-all border border-white/10 text-sm sm:text-base"
                 >
                   Calculate Again
                 </button>
                 <button
                   onClick={handleShare}
-                  className="flex-1 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white font-semibold py-4 px-6 rounded-xl transition-all glow-purple"
+                  className="flex-1 min-w-[80px] bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white font-semibold py-3 sm:py-4 px-4 sm:px-6 rounded-xl transition-all glow-purple text-sm sm:text-base"
                 >
                   {copied ? 'Copied' : 'Copy'}
                 </button>
                 <button
                   onClick={handleShareOnX}
-                  className="flex-1 bg-black hover:bg-gray-900 text-white font-semibold py-4 px-6 rounded-xl transition-all border border-white/20 flex items-center justify-center gap-2"
+                  className="flex-1 min-w-[100px] bg-black hover:bg-gray-900 text-white font-semibold py-3 sm:py-4 px-4 sm:px-6 rounded-xl transition-all border border-white/20 flex items-center justify-center gap-2 text-sm sm:text-base whitespace-nowrap"
                 >
-                  <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+                  <svg className="w-5 h-5 flex-shrink-0" fill="currentColor" viewBox="0 0 24 24">
                     <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
                   </svg>
-                  Share on X
+                  <span className="hidden sm:inline">Share on X</span>
+                  <span className="sm:hidden">Share</span>
                 </button>
                 <button
                   onClick={handleDownload}
-                  className="flex-1 bg-white/10 hover:bg-white/20 text-white font-semibold py-4 px-6 rounded-xl transition-all border border-white/10 flex items-center justify-center gap-2"
+                  className="flex-1 min-w-[100px] bg-white/10 hover:bg-white/20 text-white font-semibold py-3 sm:py-4 px-4 sm:px-6 rounded-xl transition-all border border-white/10 flex items-center justify-center gap-2 text-sm sm:text-base"
                 >
-                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg className="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
                   </svg>
-                  Download Card
+                  <span className="hidden sm:inline">Download Card</span>
+                  <span className="sm:hidden">Download</span>
                 </button>
               </div>
             </div>
