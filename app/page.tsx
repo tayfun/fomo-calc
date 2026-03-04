@@ -329,10 +329,16 @@ function HomeContent() {
   const [copied, setCopied] = useState(false);
 
   const handleShare = () => {
-    const text = `If I had invested ${formatLargeCurrency(parseFloat(amount) || 0, apiResponse?.currency)} in ${selectedInvestment?.name} back in ${selectedYear}, I'd have ${formatLargeCurrency(results.currentValue, apiResponse?.currency)} today... 💀\n\nCalculate your regret at shouldabought.com`;
+    const text = `If I had invested ${formatLargeCurrency(parseFloat(amount) || 0, apiResponse?.currency)} in ${selectedInvestment?.name} back in ${selectedYear}, I'd have ${formatLargeCurrency(results.currentValue, apiResponse?.currency)} today... 💀\n\nCalculate your regret at Fomo Calculator`;
     navigator.clipboard.writeText(text);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
+  };
+
+  const handleShareOnX = () => {
+    const text = `If I had invested ${formatLargeCurrency(parseFloat(amount) || 0, apiResponse?.currency)} in ${selectedInvestment?.name} back in ${selectedYear}, I'd have ${formatLargeCurrency(results.currentValue, apiResponse?.currency)} today... 💀\n\nCalculate your regret at Fomo Calculator`;
+    const encodedText = encodeURIComponent(text);
+    window.open(`https://twitter.com/intent/tweet?text=${encodedText}`, '_blank');
   };
 
   const handleDownload = async () => {
@@ -349,7 +355,7 @@ function HomeContent() {
       });
 
       const link = document.createElement('a');
-      link.download = `shouldabought-${selectedInvestment?.symbol}-${selectedYear}.png`;
+      link.download = `fomo-calculator-${selectedInvestment?.symbol}-${selectedYear}.png`;
       link.href = dataUrl;
       link.click();
     } catch (err) {
@@ -373,7 +379,7 @@ function HomeContent() {
         <div className="mb-8 animate-slide-up">
           <div className="flex items-center gap-2 text-white/80 text-sm font-medium tracking-wider uppercase">
             <div className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-            shouldabought.com
+            Fomo Calculator
           </div>
         </div>
 
@@ -702,6 +708,15 @@ function HomeContent() {
                   className="flex-1 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white font-semibold py-4 px-6 rounded-xl transition-all glow-purple"
                 >
                   {copied ? 'Copied' : 'Copy'}
+                </button>
+                <button
+                  onClick={handleShareOnX}
+                  className="flex-1 bg-black hover:bg-gray-900 text-white font-semibold py-4 px-6 rounded-xl transition-all border border-white/20 flex items-center justify-center gap-2"
+                >
+                  <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+                    <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
+                  </svg>
+                  Share on X
                 </button>
                 <button
                   onClick={handleDownload}

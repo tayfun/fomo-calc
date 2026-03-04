@@ -13,7 +13,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "ShouldaBought.com | Viral Investment Regret Calculator",
+  title: "Fomo Calculator | Investment Regret Calculator",
   description: "Calculate how much money you could have made (or lost) if you invested in stocks, crypto, or commodities at the right time. The ultimate FOMO calculator.",
   keywords: ["investment calculator", "regret calculator", "FOMO", "stocks", "crypto", "bitcoin", "tesla", "nvidia"],
 };
